@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Flask Calculator</title>
+    <style>
+        .calculator {
+            max-width: 300px;
+            margin: 50px auto;
+            padding: 20px;
+            border: 1px solid #ccc;
+            border-radius: 10px;
+            background-color: #f9f9f9;
+        }
+        #display {
+            width: 100%;
+            height: 40px;
+            margin-bottom: 10px;
+            text-align: right;
+            padding: 5px;
+            font-size: 18px;
+        }
+        .buttons {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 5px;
+        }
+        button {
+            height: 50px;
+            font-size: 18px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        .operator {
+            background-color: #ff9500;
+            color: white;
+        }
+        #result {
+            margin-top: 10px;
+            font-weight: bold;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <div class="calculator">
+        <h2>Flask Calculator</h2>
+        <input type="text" id="display" readonly>
+        <div class="buttons">
+            <button onclick="clearDisplay()">C</button>
+            <button onclick="appendToDisplay('(')">(</button>
+            <button onclick="appendToDisplay(')')">)</button>
+            <button class="operator" onclick="appendToDisplay('/')">/</button>
+            
+            <button onclick="appendToDisplay('7')">7</button>
+            <button onclick="appendToDisplay('8')">8</button>
+            <button onclick="appendToDisplay('9')">9</button>
+            <button class="operator" onclick="appendToDisplay('*')">×</button>
+            
+            <button onclick="appendToDisplay('4')">4</button>
+            <button onclick="appendToDisplay('5')">5</button>
+            <button onclick="appendToDisplay('6')">6</button>
+            <button class="operator" onclick="appendToDisplay('-')">-</button>
+            
+            <button onclick="appendToDisplay('1')">1</button>
+            <button onclick="appendToDisplay('2')">2</button>
+            <button onclick="appendToDisplay('3')">3</button>
+            <button class="operator" onclick="appendToDisplay('+')">+</button>
+            
+            <button onclick="appendToDisplay('0')">0</button>
+            <button onclick="appendToDisplay('.')">.</button>
+            <button colspan="2" onclick="calculate()" style="grid-column: span 2; background-color: #4CAF50; color: white;">=</button>
+        </div>
+        <div id="result"></div>
+    </div>
+
+    <script>
+        function appendToDisplay(value) {
+            document.getElementById('display').value += value;
+        }
+        
+        function clearDisplay() {
+            document.getElementById('display').value = '';
+            document.getElementById('result').innerText = '';
+        }
+        
+        function calculate() {
+            const expression = document.getElementById('display').value;
+            
+            fetch('/calculate', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({expression: expression})
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.result !== undefined) {
+                    document.getElementById('result').innerText = `Result: ${data.result}`;
+                    document.getElementById('result').style.color = 'green';
+                } else {
+                    document.getElementById('result').innerText = `Error: ${data.error}`;
+                    document.getElementById('result').style.color = 'red';
+                }
+            })
+            .catch(error => {
+                document.getElementById('result').innerText = 'Error: Calculation failed';
+                document.getElementById('result').style.color = 'red';
+            });
+        }
+        
+        // Allow keyboard input
+        document.addEventListener('keydown', function(event) {
+            const key = event.key;
+            const allowedKeys = ['0','1','2','3','4','5','6','7','8','9','+','-','*','/','.','(',')','Enter','Backspace','Delete'];
+            
+            if (allowedKeys.includes(key)) {
+                event.preventDefault();
+                if (key === 'Enter') {
+                    calculate();
+                } else if (key === 'Backspace' || key === 'Delete') {
+                    clearDisplay();
+                } else {
+                    appendToDisplay(key);
+                }
+            }
+        });
+    </script>
+</body>
+</html>
